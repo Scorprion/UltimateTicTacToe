@@ -1,0 +1,85 @@
+from TicTacToe import TicTacToe
+import numpy as np
+import random
+
+class UltimateTTT(object):
+    def __init__(self) -> None:
+        self.board = np.array([TicTacToe() for _ in range(9)]).reshape(3, 3)
+        self.possible_boards = np.arange(9)
+        self.turn = 'O'
+    
+    def get_possible_moves(self):
+        # No possible move if the game is done
+        if not self.get_result() is None:
+            return [], []
+
+        possible_moves = []
+        for i in self.possible_boards:
+            possible_moves.append(self.board.flatten()[i].get_possible_moves())
+        return self.possible_boards.tolist(), possible_moves
+
+    def get_abstract_board(self):
+        return np.asarray([' ' if b.get_result() is None else b.get_result() for b in self.board.flatten()]).reshape(3, 3)
+    
+    def get_result(self):
+        abstract_board = self.get_abstract_board()
+        
+        # Only using the "next board" array to check if there is a possible move
+        return TicTacToe.determine_ttt_winner(abstract_board, self.possible_boards)
+
+    def move(self, board, move):
+        # Ensure the selected board is playable on in the current position
+        assert(board in self.possible_boards)
+        
+        # Ensure the given move is playable on the selected board
+        assert(move in self.board.flatten()[board].get_possible_moves())
+
+        # Make the "move" at the specified "board"
+        self.board[board // 3][board % 3].move(move, self.turn)
+
+        # Switch the turn to the other player
+        self._switch_turn()
+
+        # Per UTTT rules, the next board is the one the player moved at, unless it's already completed in which case the next move can be anywhere
+        if self.board[move // 3][move % 3].get_result() is None:
+            self.possible_boards = np.array([move])
+        else:
+            self.possible_boards = np.argwhere(self.get_abstract_board().flatten() == ' ').flatten()
+
+    def _switch_turn(self):
+        self.turn = 'X' if self.turn == 'O' else 'O'
+
+    def print_board(self):
+        # Get 3 boards at a time
+        for full_board_row in self.board:
+
+            # Concatenate the 3 boards together
+            boards_row = np.hstack([b.board for b in full_board_row])
+
+            # Print each row of the 3 concatenated boards
+            for row in boards_row:
+                
+                # Split each board (every 3 characters) and separate them by dividers '|'
+                split_row = [row[i:i+3] for i in range(0, len(row), 3)]
+                for segment in split_row:
+                    print('|' + ' '.join(segment) + '|', end='')
+
+                # Create a new line to separate each row
+                print('')
+            
+            # Create a horizontal divider to separate each "full_board_row" (3 boards)
+            print('---------------------')
+
+test = UltimateTTT()
+
+while test.get_result() is None:
+    test.print_board()
+    possible_boards, possible_moves = test.get_possible_moves()
+    print(possible_boards, possible_moves)
+    board_idx = random.randint(0, len(possible_boards) - 1)
+    move = random.choice(possible_moves[board_idx])
+    test.move(possible_boards[board_idx], move)
+
+    # board, move = input('Board: {} Move: {} \nInput your move:'.format(*test.get_possible_moves())).split()
+    # test.move(int(board), int(move))
+print(test.get_abstract_board(), test.get_result())
