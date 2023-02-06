@@ -7,7 +7,7 @@ class UltimateTTT(object):
         self.board = np.array([TicTacToe() for _ in range(9)]).reshape(3, 3)
         self.possible_boards = np.arange(9)
         self.turn = 'O'
-    
+
     def get_possible_moves(self):
         # No possible move if the game is done
         if not self.get_result() is None:
@@ -20,7 +20,7 @@ class UltimateTTT(object):
 
     def get_abstract_board(self):
         return np.asarray([' ' if b.get_result() is None else b.get_result() for b in self.board.flatten()]).reshape(3, 3)
-    
+
     def get_result(self):
         abstract_board = self.get_abstract_board()
         
@@ -30,7 +30,7 @@ class UltimateTTT(object):
     def move(self, board, move):
         # Ensure the selected board is playable on in the current position
         assert(board in self.possible_boards)
-        
+
         # Ensure the given move is playable on the selected board
         assert(move in self.board.flatten()[board].get_possible_moves())
 
@@ -58,7 +58,7 @@ class UltimateTTT(object):
 
             # Print each row of the 3 concatenated boards
             for row in boards_row:
-                
+
                 # Split each board (every 3 characters) and separate them by dividers '|'
                 split_row = [row[i:i+3] for i in range(0, len(row), 3)]
                 for segment in split_row:
@@ -66,9 +66,26 @@ class UltimateTTT(object):
 
                 # Create a new line to separate each row
                 print('')
-            
+
             # Create a horizontal divider to separate each "full_board_row" (3 boards)
             print('---------------------')
+
+    def get_features(self):
+        total_x_board = []
+        total_o_board = []
+        for row in self.board:
+            row_x_board = []
+            row_o_board = []
+            for b in row:
+                x_board = np.where(b.board == 'X', 1, 0)
+                o_board = np.where(b.board == 'O', 1, 0)
+                row_x_board.append(x_board)
+                row_o_board.append(o_board)
+            total_x_board.append(np.hstack(row_x_board))
+            total_o_board.append(np.hstack(row_o_board))
+        if self.turn == 'O':
+            return np.vstack(total_o_board), np.vstack(total_x_board)
+        return np.vstack(total_x_board), np.vstack(total_o_board)
 
 test = UltimateTTT()
 
@@ -79,7 +96,9 @@ while test.get_result() is None:
     board_idx = random.randint(0, len(possible_boards) - 1)
     move = random.choice(possible_moves[board_idx])
     test.move(possible_boards[board_idx], move)
-
     # board, move = input('Board: {} Move: {} \nInput your move:'.format(*test.get_possible_moves())).split()
     # test.move(int(board), int(move))
+test.print_board()
+print(test.get_features())
+print('On top is the %s board' % test.turn)
 print(test.get_abstract_board(), test.get_result())

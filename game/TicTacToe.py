@@ -29,24 +29,24 @@ class TicTacToe(object):
             unique = list(set(row))
             if len(unique) == 1 and not ' ' in unique:
                 return unique[0]
-            
+
         # Check vertical
         for col in board.T:
             unique = list(set(col))
             if len(unique) == 1 and not ' ' in unique:
-                return unique[0] 
-        
+                return unique[0]
+
         # Check diagonals
         main_diag = np.diag(board)
         unique = list(set(main_diag))
         if len(unique) == 1 and not ' ' in unique:
-            return unique[0] 
+            return unique[0]
 
         opp_diag = np.diag(np.fliplr(board))
         unique = list(set(opp_diag))
         if len(unique) == 1 and not ' ' in unique:
-            return unique[0] 
-        
+            return unique[0]
+
         # Check for a tie
         if len(move_list) == 0:
             return '-'
