@@ -1,6 +1,7 @@
 from TicTacToe import TicTacToe
 import numpy as np
 import random
+from copy import deepcopy
 
 class UltimateTTT(object):
     def __init__(self) -> None:
@@ -23,7 +24,7 @@ class UltimateTTT(object):
 
     def get_result(self):
         abstract_board = self.get_abstract_board()
-        
+
         # Only using the "next board" array to check if there is a possible move
         return TicTacToe.determine_ttt_winner(abstract_board, self.possible_boards)
 
@@ -86,6 +87,9 @@ class UltimateTTT(object):
         if self.turn == 'O':
             return np.vstack(total_o_board), np.vstack(total_x_board)
         return np.vstack(total_x_board), np.vstack(total_o_board)
+
+    def copy(self):
+        return deepcopy(self)
 
 test = UltimateTTT()
 
