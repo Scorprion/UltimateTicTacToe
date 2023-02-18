@@ -1,7 +1,8 @@
-from TicTacToe import TicTacToe
+from game.tictactoe import TicTacToe
 import numpy as np
 import random
 from copy import deepcopy
+import torch
 
 class UltimateTTT(object):
     def __init__(self) -> None:
@@ -15,9 +16,10 @@ class UltimateTTT(object):
             return [], []
 
         possible_moves = []
-        for i in self.possible_boards:
-            possible_moves.append(self.board.flatten()[i].get_possible_moves())
-        return self.possible_boards.tolist(), possible_moves
+        for b in self.possible_boards:
+            for move in self.board.flatten()[b].get_possible_moves():
+                possible_moves.append(b * 9 + move)
+        return possible_moves
 
     def get_abstract_board(self):
         return np.asarray([' ' if b.get_result() is None else b.get_result() for b in self.board.flatten()]).reshape(3, 3)
@@ -28,22 +30,21 @@ class UltimateTTT(object):
         # Only using the "next board" array to check if there is a possible move
         return TicTacToe.determine_ttt_winner(abstract_board, self.possible_boards)
 
-    def move(self, board, move):
-        # Ensure the selected board is playable on in the current position
-        assert(board in self.possible_boards)
-
+    def move(self, move):
         # Ensure the given move is playable on the selected board
-        assert(move in self.board.flatten()[board].get_possible_moves())
+        assert(move in self.get_possible_moves())
 
-        # Make the "move" at the specified "board"
-        self.board[board // 3][board % 3].move(move, self.turn)
+        # Make the move
+        board = int(move / 9)
+        move_in_subboard = move - board * 9
+        self.board.flatten()[board].move(move_in_subboard, self.turn)
 
         # Switch the turn to the other player
         self._switch_turn()
 
         # Per UTTT rules, the next board is the one the player moved at, unless it's already completed in which case the next move can be anywhere
-        if self.board[move // 3][move % 3].get_result() is None:
-            self.possible_boards = np.array([move])
+        if self.board.flatten()[board].get_result() is None:
+            self.possible_boards = np.array([move_in_subboard])
         else:
             self.possible_boards = np.argwhere(self.get_abstract_board().flatten() == ' ').flatten()
 
@@ -85,12 +86,15 @@ class UltimateTTT(object):
             total_x_board.append(np.hstack(row_x_board))
             total_o_board.append(np.hstack(row_o_board))
         if self.turn == 'O':
-            return np.vstack(total_o_board), np.vstack(total_x_board)
-        return np.vstack(total_x_board), np.vstack(total_o_board)
+            return torch.from_numpy(np.expand_dims(np.stack((np.vstack(total_o_board),
+                np.vstack(total_x_board)), axis=0), axis=0)).float()
+        return torch.from_numpy(np.expand_dims(np.stack((np.vstack(total_x_board), np.vstack(total_o_board)),
+                axis=0), axis=0)).float()
 
     def copy(self):
         return deepcopy(self)
-
+        
+"""
 test = UltimateTTT()
 
 while test.get_result() is None:
@@ -106,3 +110,5 @@ test.print_board()
 print(test.get_features())
 print('On top is the %s board' % test.turn)
 print(test.get_abstract_board(), test.get_result())
+"""
+
