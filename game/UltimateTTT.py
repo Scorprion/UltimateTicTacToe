@@ -35,7 +35,7 @@ class UltimateTTT(object):
         assert(move in self.get_possible_moves())
 
         # Make the move
-        board = int(move / 9)
+        board = move // 9
         move_in_subboard = move - board * 9
         self.board.flatten()[board].move(move_in_subboard, self.turn)
 
@@ -43,7 +43,7 @@ class UltimateTTT(object):
         self._switch_turn()
 
         # Per UTTT rules, the next board is the one the player moved at, unless it's already completed in which case the next move can be anywhere
-        if self.board.flatten()[board].get_result() is None:
+        if self.board.flatten()[move_in_subboard].get_result() is None:
             self.possible_boards = np.array([move_in_subboard])
         else:
             self.possible_boards = np.argwhere(self.get_abstract_board().flatten() == ' ').flatten()

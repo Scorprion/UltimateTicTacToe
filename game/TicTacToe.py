@@ -1,4 +1,6 @@
 import numpy as np
+from copy import deepcopy
+import torch
 
 class TicTacToe(object):
     def __init__(self, board=None) -> None:
@@ -6,8 +8,6 @@ class TicTacToe(object):
 
         Parameters
         ----------
-        turn : str, optional
-            The current turn of the player, by default 'O'
         board : array, optional
             The current board state. If left unspecified, a new board will be created. By default None
         """
@@ -18,6 +18,9 @@ class TicTacToe(object):
             self.board = np.full((3, 3), ' ')
 
         self.move_list = np.argwhere(self.board.flatten() == ' ').flatten().tolist()
+
+        # TODO: Remove this after testing
+        self.turn = 'O'
 
     def get_possible_moves(self) -> list:
         return self.move_list if self.get_result() is None else []
@@ -74,3 +77,19 @@ class TicTacToe(object):
 
     def __str__(self):
         return str(self.board)
+
+    def copy(self):
+        return deepcopy(self)
+    
+    def get_features(self):
+        row_x_board = []
+        row_o_board = []
+        for row in self.board:
+            x_board = np.where(row == 'X', 1, 0)
+            o_board = np.where(row == 'O', 1, 0)
+            row_x_board.append(x_board)
+            row_o_board.append(o_board)
+        
+        if self.turn == 'O':
+            return torch.from_numpy(np.expand_dims(np.stack((np.vstack(row_x_board), np.vstack(row_o_board)), axis=0), axis=0)).float()
+        return torch.from_numpy(np.expand_dims(np.stack((np.vstack(row_o_board), np.vstack(row_x_board)), axis=0), axis=0)).float()
