@@ -83,7 +83,7 @@ def mcts_trajectory(node, c_puct, neural_net):
     if not node.is_expanded():
         value, prior = neural_net(node.game.get_features())
         masked_prior = torch.zeros(81)
-        masked_prior[torch.LongTensor(node.game.get_possible_moves())] = prior[0][torch.LongTensor(node.game.get_possible_moves())]
+        masked_prior[torch.LongTensor(node.game.get_possible_moves())] = torch.exp(prior[0][torch.LongTensor(node.game.get_possible_moves())])
         masked_normalized_prior = masked_prior / torch.sum(masked_prior)
         node.update(value)
         node.expand(masked_normalized_prior)
@@ -101,14 +101,16 @@ def mcts_search(node, simulations, c_puct, neural_net):
 
 def mcts_simulation(init_board, network, simulations_per_move):
     value, prior = network(init_board.get_features())
+
     masked_prior = torch.zeros(81)
-    masked_prior[torch.LongTensor(init_board.get_possible_moves())] = prior[0][torch.LongTensor(init_board.get_possible_moves())]
+    masked_prior[torch.LongTensor(init_board.get_possible_moves())] = torch.exp(prior[0][torch.LongTensor(init_board.get_possible_moves())])
     masked_normalized_prior = masked_prior / torch.sum(masked_prior)
 
     # Creates the root node for the simulations
     current_node = Node(init_board, None, 0, None)
     current_node.expand(masked_normalized_prior)
 
+    states = []
     policies = []
     values = []
 
@@ -123,14 +125,26 @@ def mcts_simulation(init_board, network, simulations_per_move):
         # current_node = max(current_node.children, key=attrgetter('visits'))
         print([child.visits for child in current_node.children])
         total_visit_weights = [child.visits for child in current_node.children]
+        
+        mcts_policy = torch.zeros(81)
+        mcts_policy[torch.LongTensor(current_node.game.get_possible_moves())] = torch.tensor([child.visits / sum(total_visit_weights) for child in current_node.children])
+
+        states.append(current_node.game.get_features())
+        policies.append(mcts_policy)
+
         current_node = random.choices(current_node.children, weights=total_visit_weights)[0]
-        current_node.game.print_board()
-        print()
-    
+
+    # Note that it isn't adding the terminal state into the training data
+    if current_node.game.get_result() == '-':
+        for _ in policies:
+            values.append(torch.tensor(0).float())
+    else:
+        result = -1 if current_node.game.get_result() == current_node.game.turn else 1
+        for idx, _ in enumerate(policies):
+            values.insert(0, torch.tensor(result * (-1) ** idx).float())
+
     print(current_node.game.get_abstract_board())
     print(current_node.game.get_result())
 
-
-        
-        
+    return states, policies, values
 

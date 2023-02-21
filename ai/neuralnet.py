@@ -45,7 +45,6 @@ class Network(nn.Module):
 
         self.activation = nn.ReLU()
         self.logit_activation = nn.Tanh()
-        self.policy_activation = nn.Softmax()
 
     def forward(self, x):
         x = self.conv1(x)
@@ -75,7 +74,7 @@ class Network(nn.Module):
         policy = self.activation(policy)
 
         policy = self.policy_linear3(policy)
-        policy = self.policy_activation(policy)
+        # No activation (outputs logits) because of the CrossEntropyLoss function
 
         return value, policy
 

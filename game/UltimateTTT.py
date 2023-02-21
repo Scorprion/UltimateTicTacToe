@@ -13,7 +13,7 @@ class UltimateTTT(object):
     def get_possible_moves(self):
         # No possible move if the game is done
         if not self.get_result() is None:
-            return [], []
+            return []
 
         possible_moves = []
         for b in self.possible_boards:
@@ -93,7 +93,7 @@ class UltimateTTT(object):
 
     def copy(self):
         return deepcopy(self)
-        
+
 """
 test = UltimateTTT()
 
