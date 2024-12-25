@@ -1,0 +1,71 @@
+body {
+  height: 70%;
+  width: 100%;
+  text-align: center;
+}
+
+h1 {
+  font-family: "Open Sans";
+  font-weight: normal;
+  font-size: 40px;
+}
+
+#totalBoard {
+  width: 33vw;
+  height: 33vw;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  margin: auto;
+  grid-gap: 3px;
+  background-color: black;
+}
+
+.boardContainer {
+  background-color: white;
+}
+
+.innerBoard {
+  width: 80%;
+  height: 80%;
+  display: grid;
+  margin: 10%;
+  grid-gap: 1px;
+  grid-template-columns: repeat(3, 1fr);
+  scale: 1;
+  background-color: black;
+}
+
+.boardContainer.blueWin,
+.boardContainer.blueWin .innerBoard,
+.boardContainer.blueWin .cellContainer, 
+.boardContainer.blueWin .cell {
+  background-color: #78c7ff;
+}
+
+.boardContainer.redWin,
+.boardContainer.redWin .innerBoard,
+.boardContainer.redWin .cellContainer, 
+.boardContainer.redWin .cell {
+  background-color: #fb8989;
+}
+
+.cell {
+  background-color: yellow;
+  width: 90%;
+  height: 90%;
+  margin: 5%;
+  border-radius: 5px;
+}
+
+.cellContainer {
+  background-color: white;
+}
+
+.cell[clickable="True"] {
+  cursor: pointer;
+}
+
+.cell[clickable="False"] {
+  cursor: default;
+}
+
