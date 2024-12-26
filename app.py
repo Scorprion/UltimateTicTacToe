@@ -8,11 +8,15 @@ app = FastAPI()
 app.mount('/static', StaticFiles(directory='static', html=True), name='static')
 
 # Create game board
-bot = MiniMax(2, n_sims=250, verbose=False)
+bot = MiniMax(1, n_sims=25, verbose=False)
 
 async def process_computer_move(websocket: WebSocket, uttt):
     # Calculate AI move in a separate task
     move = bot.get_move(uttt)
+
+    # Ensure there is a move to play, otherwise the game is finished
+    if move is None:
+        return
     uttt.play(*move)
 
     # Send AI move info and unlock the board to the user again

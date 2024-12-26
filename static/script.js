@@ -44,6 +44,7 @@ function createBoard() {
 var ws = new WebSocket("ws://localhost:8000/ws");
 var validMoves, player = 1;
 var isLocked = false;  // lock on the board for when the AI is thinking
+const header = document.getElementById("header");
 
 ws.onopen = () => {
   console.log("WebSocket connection established");
@@ -51,16 +52,30 @@ ws.onopen = () => {
 
 ws.onmessage = (event) => {
   const data = JSON.parse(event.data);
+
+  // Check if there was an action sent in the data
   if (data.action) {
-    if (data.result != null) {
-      const header = document.getElementById('title');
-      header.classList.add("animate");
+
+    // Check if the board is now complete
+    console.log(data.result);
+    if (!header.classList.contains("complete")) {
+      validMoves = JSON.stringify(data.valid_moves);
+      player = data.player;
+      isLocked = data.locked;
+      updateBoard(data.board, data.pos, data.player, data.valid_moves, data.completed_boards, data.locked, data.result);
     }
-    console.log(`Result: ${data.result}`);
-    validMoves = JSON.stringify(data.valid_moves);
-    player = data.player;
-    isLocked = data.locked;
-    updateBoard(data.board, data.pos, data.player, data.valid_moves, data.completed_boards, data.locked);
+
+    if (data.result != null) {
+      header.classList.add("complete");
+      if (data.result == -1) {
+        header.innerText = "Red has won";
+      } else if (data.result == 1) {
+        header.innerText = "Blue has won";
+      } else {
+        header.innerText = "The game is a draw";
+      }
+    }
+
   } else if (data.init) {
     validMoves = JSON.stringify(data.valid_moves);
   } else {
@@ -90,10 +105,9 @@ function handleMoveAttempt(boardIndex, cellIndex) {
 
   // Send the move to the game_logic controller
   ws.send(JSON.stringify({board: boardIndex, pos: cellIndex, isLocked: isLocked}));
-  console.log(`Clicked board ${boardIndex}, cell ${cellIndex}`);
 }
 
-function updateBoard(boardIndex, cellIndex, player, legalMoves, completedBoards, locked) {
+function updateBoard(boardIndex, cellIndex, player, legalMoves, completedBoards, locked, result) {
   // For all the cells in a completedBoard, mark them as played and make their background colored
   completedBoards.forEach((board) => {
     const completed = document.getElementById(`boardContainer${board[1]}`);
@@ -123,13 +137,15 @@ function updateBoard(boardIndex, cellIndex, player, legalMoves, completedBoards,
     cell.setAttribute("Clickable", "False");
   });
 
-  // Loop over all legal moves and update their squares
-  legalMoves.forEach((move) => {
-    const cell = document.getElementById(`cell${move[0]}${move[1]}`);
-    cell.style.backgroundColor = "yellow";
-    cell.style.opacity = locked ? "0.4" : "1";
-    cell.setAttribute("Clickable", locked ? "False" : "True");
-  });
+  if (result == null) {
+    // Loop over all legal moves and update their squares
+    legalMoves.forEach((move) => {
+      const cell = document.getElementById(`cell${move[0]}${move[1]}`);
+      cell.style.backgroundColor = "yellow";
+      cell.style.opacity = locked ? "0.4" : "1";
+      cell.setAttribute("Clickable", locked ? "False" : "True");
+    });
+  }
 
   // For each completed board, mark all cells as finished
   // Paint the entire div with the player who won
